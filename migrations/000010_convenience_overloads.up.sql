@@ -1,6 +1,10 @@
 -- Дополнительные удобные перегрузки (overloads) для функций SECURITY DEFINER,
 -- чтобы вызовы из отчёта работали с любым набором параметров
 
+-- 0. Разрешить доступ к схеме public (где лежит расширение pgcrypto) всем ролям
+GRANT USAGE ON SCHEMA public TO PUBLIC, app_reader, app_writer, app_owner, auditor;
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO PUBLIC, app_reader, app_writer, app_owner, auditor;
+
 -- 1. Добавим ведомство FTS_RU если его нет
 INSERT INTO ref.agencies (agency_code, agency_name, inn, ogrn, trust_tier, is_active)
 VALUES ('FTS_RU', 'Федеральная таможенная служба РФ', '7730176610', '1047730023703', 4, TRUE)

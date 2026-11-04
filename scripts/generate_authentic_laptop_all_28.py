@@ -145,20 +145,20 @@ generate_terminal_img([
 generate_terminal_img([
     "university_db=> SET ROLE app_writer;",
     "SET",
-    "university_db=> SELECT app.fn_issue_electronic_passport(2, '2026', '123456', 'CHIP-RU-9921', 'MVD-770-001', '2026-01-01', '2036-01-01');",
-    " fn_issue_electronic_passport ",
-    "------------------------------",
-    "                           12",
+    "university_db=> SELECT app.fn_issue_electronic_passport(2::bigint, 'E_PASSPORT', '2026', '789123', '660-001', 10, 'CHIP_RAW_PAYLOAD_E_PASSPORT_01'::bytea, 'ChipMasterKey999') AS new_passport_id;",
+    " new_passport_id ",
+    "-----------------",
+    "              18",
     "(1 row)"
 ], 'pgadmin_fig09.png')
 
-# Fig 10: SecDef rejects duplicate active passport
+# Fig 10: SecDef rejects invalid passport series format
 generate_terminal_img([
     "university_db=> SET ROLE app_writer;",
     "SET",
-    "university_db=> SELECT app.fn_issue_electronic_passport(2, '2026', '999999', 'CHIP-RU-9922', 'MVD-770-001', '2026-01-01', '2036-01-01');",
-    "ERROR:  У гражданина 2 уже есть действующий электронный паспорт",
-    "CONTEXT:  функция PL/pgSQL app.fn_issue_electronic_passport(), строка 34, оператор RAISE"
+    "university_db=> SELECT app.fn_issue_electronic_passport(4::bigint, 'E_PASSPORT', '66', '789', '660-001', 10, 'CHIP_RAW_DATA_SAMPLE'::bytea, 'ChipMasterKey999');",
+    "ERROR:  Некорректная серия паспорта: \"66\" (требуется ровно 4 цифры)",
+    "CONTEXT:  функция PL/pgSQL app.fn_issue_electronic_passport(), строка 36, оператор RAISE"
 ], 'pgadmin_fig10.png')
 
 # Fig 11: Writer direct INSERT into access_tokens denied

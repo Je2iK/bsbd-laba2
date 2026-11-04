@@ -1,0 +1,15 @@
+# Dependencies and executables
+typst.exe
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Office temporary files
+~$*.docx
+~$*.xlsx
+~$*.pptx
+
+# OS metadata
+Thumbs.db
+Desktop.ini

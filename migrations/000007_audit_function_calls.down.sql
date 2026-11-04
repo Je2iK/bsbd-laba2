@@ -1,0 +1,2 @@
+DROP FUNCTION IF EXISTS audit.fn_log_function_call(TEXT, TEXT, JSONB, BOOLEAN, TEXT, NUMERIC);
+DROP TABLE IF EXISTS audit.function_calls CASCADE;

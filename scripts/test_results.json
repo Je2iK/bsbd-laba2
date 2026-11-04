@@ -1,0 +1,145 @@
+[
+  {
+    "id": 1,
+    "title": "Чтение общедоступных таблиц схемы app пользователем usr_reader",
+    "user": "usr_reader",
+    "sql": "SELECT citizen_id, first_name, last_name, birth_date, gender FROM app.citizens ORDER BY citizen_id LIMIT 3;",
+    "stdout": "citizen_id | first_name | last_name | birth_date | gender \n------------+------------+-----------+------------+--------\n          1 | Александр  | Иванов    | 1985-04-12 | M\n          2 | Елена      | Смирнова  | 1990-08-25 | F\n          3 | Дмитрий    | Кузнецов  | 1978-11-03 | M\n(3 ������)",
+    "stderr": "",
+    "exit_code": 0,
+    "expected": "SUCCESS",
+    "status": "PASSED"
+  },
+  {
+    "id": 2,
+    "title": "Попытка несанкционированного чтения биометрических данных (usr_reader)",
+    "user": "usr_reader",
+    "sql": "SELECT biometric_id, citizen_id, quality_score FROM app.biometric_templates LIMIT 1;",
+    "stdout": "",
+    "stderr": "ОШИБКА:  нет доступа к таблице biometric_templates",
+    "exit_code": 1,
+    "expected": "ERROR (Permission Denied for table biometric_templates)",
+    "status": "PASSED"
+  },
+  {
+    "id": 3,
+    "title": "Попытка несанкционированного чтения электронных паспортов (usr_reader)",
+    "user": "usr_reader",
+    "sql": "SELECT passport_id, series, number FROM app.electronic_passports LIMIT 1;",
+    "stdout": "",
+    "stderr": "ОШИБКА:  нет доступа к таблице electronic_passports",
+    "exit_code": 1,
+    "expected": "ERROR (Permission Denied for table electronic_passports)",
+    "status": "PASSED"
+  },
+  {
+    "id": 4,
+    "title": "Попытка выполнения DDL (создание таблицы) оператором usr_writer",
+    "user": "usr_writer",
+    "sql": "CREATE TABLE app.malicious_backdoor (id int, secret text);",
+    "stdout": "",
+    "stderr": "ОШИБКА:  нет доступа к схеме app\n������ 1: CREATE TABLE app.malicious_backdoor (id int, secret text);\n                    ^",
+    "exit_code": 1,
+    "expected": "ERROR (Permission Denied for schema app)",
+    "status": "PASSED"
+  },
+  {
+    "id": 5,
+    "title": "Попытка прямой модификации журнала change_log оператором usr_writer",
+    "user": "usr_writer",
+    "sql": "INSERT INTO audit.change_log (username, table_schema, table_name, operation) VALUES ('hacker', 'app', 'citizens', 'DELETE');",
+    "stdout": "",
+    "stderr": "ОШИБКА:  нет доступа к таблице change_log",
+    "exit_code": 1,
+    "expected": "ERROR (Permission Denied for table change_log)",
+    "status": "PASSED"
+  },
+  {
+    "id": 6,
+    "title": "Попытка прямой вставки в защищенную таблицу биометрии в обход функций (usr_writer)",
+    "user": "usr_writer",
+    "sql": "INSERT INTO app.biometric_templates (citizen_id, modality_id, template_hash, encrypted_template, quality_score, capture_device_id) VALUES (1, 1, repeat('a', 64), 'raw'::bytea, 90.00, 'DEV-01');",
+    "stdout": "",
+    "stderr": "ОШИБКА:  нет доступа к таблице biometric_templates",
+    "exit_code": 1,
+    "expected": "ERROR (Permission Denied for table biometric_templates)",
+    "status": "PASSED"
+  },
+  {
+    "id": 7,
+    "title": "Позитивный вызов SECURITY DEFINER регистрации биометрии (usr_writer)",
+    "user": "usr_writer",
+    "sql": "SELECT app.fn_register_biometric_template(3::bigint, 'FACE_2D', repeat('BIO_SAMPLE_DATA_', 4)::bytea, 94.50, 'CAM-TERMINAL-07', 'SuperSecretPass123') AS new_bio_id;",
+    "stdout": "new_bio_id \n------------\n          5\n(1 ������)",
+    "stderr": "",
+    "exit_code": 0,
+    "expected": "SUCCESS (new_bio_id returned, trust level upgraded to 5)",
+    "status": "PASSED"
+  },
+  {
+    "id": 8,
+    "title": "Негативный вызов регистрации биометрии: отклонение сэмпла низкого качества (usr_writer)",
+    "user": "usr_writer",
+    "sql": "SELECT app.fn_register_biometric_template(3::bigint, 'FACE_2D', repeat('BIO_SAMPLE_DATA_', 4)::bytea, 38.00, 'CAM-TERMINAL-07', 'SuperSecretPass123');",
+    "stdout": "",
+    "stderr": "ОШИБКА:  Недопустимое качество биометрического сэмпла: 38.00 (требуется от 50.00 до 100.00 баллов)\n��������:  функция PL/pgSQL fn_register_biometric_template(bigint,character varying,bytea,numeric,character varying,text), строка 39, оператор RAISE",
+    "exit_code": 1,
+    "expected": "ERROR (Недопустимое качество биометрического сэмпла: 38.00)",
+    "status": "PASSED"
+  },
+  {
+    "id": 9,
+    "title": "Позитивный вызов SECURITY DEFINER выпуска электронного паспорта (usr_writer)",
+    "user": "usr_writer",
+    "sql": "SELECT app.fn_issue_electronic_passport(4::bigint, 'E_PASSPORT', '6624', '789123', '660-001', 10, 'CHIP_RAW_PAYLOAD_E_PASSPORT_01'::bytea, 'ChipMasterKey999') AS new_passport_id;",
+    "stdout": "new_passport_id \n-----------------\n              15\n(1 ������)",
+    "stderr": "",
+    "exit_code": 0,
+    "expected": "SUCCESS (new_passport_id returned, old passports deactivated)",
+    "status": "PASSED"
+  },
+  {
+    "id": 10,
+    "title": "Негативный вызов выпуска паспорта: нарушение формата бланка (usr_writer)",
+    "user": "usr_writer",
+    "sql": "SELECT app.fn_issue_electronic_passport(4::bigint, 'E_PASSPORT', '66', '789', '660001', 10, 'CHIP_RAW_DATA'::bytea, 'ChipMasterKey999');",
+    "stdout": "",
+    "stderr": "ОШИБКА:  Некорректная серия паспорта: \"66\" (требуется ровно 4 цифры)\n��������:  функция PL/pgSQL fn_issue_electronic_passport(bigint,character varying,character varying,character varying,character varying,integer,bytea,text), строка 36, оператор RAISE",
+    "exit_code": 1,
+    "expected": "ERROR (Некорректная серия паспорта: 66)",
+    "status": "PASSED"
+  },
+  {
+    "id": 11,
+    "title": "Позитивный вызов выдачи межведомственного токена при активном согласии (usr_writer)",
+    "user": "usr_writer",
+    "sql": "SELECT app.fn_grant_interagency_token(1::bigint, 'MVD', 'PROFILE_READ', 24) AS token_hash;",
+    "stdout": "token_hash                            \n------------------------------------------------------------------\n 698fbce2d8ed897d8e52a4417167fd4e2aaf32b1786e3b63a6e292f3a6a184c5\n(1 ������)",
+    "stderr": "",
+    "exit_code": 0,
+    "expected": "SUCCESS (token_hash generated and registered)",
+    "status": "PASSED"
+  },
+  {
+    "id": 12,
+    "title": "Негативный вызов выдачи токена: отказ из-за отсутствия согласия (usr_writer)",
+    "user": "usr_writer",
+    "sql": "SELECT app.fn_grant_interagency_token(1::bigint, 'POST_BANK', 'FULL_ACCESS', 12) AS token_hash;",
+    "stdout": "",
+    "stderr": "ОШИБКА:  Отказано в доступе: отсутствует действующее юридическое согласие гражданина на предоставление прав \"FULL_ACCESS\" ведомству \"POST_BANK\"\n��������:  функция PL/pgSQL fn_grant_interagency_token(bigint,character varying,character varying,integer), строка 64, оператор RAISE",
+    "exit_code": 1,
+    "expected": "ERROR (Отсутствует действующее юридическое согласие)",
+    "status": "PASSED"
+  },
+  {
+    "id": 13,
+    "title": "Аудит и контроль: инспекция журнала audit.function_calls аудитором (usr_auditor)",
+    "user": "usr_auditor",
+    "sql": "SELECT call_id, function_name, caller_role, success, error_message, execution_time_ms FROM audit.function_calls ORDER BY call_id DESC LIMIT 6;",
+    "stdout": "call_id |           function_name            | caller_role | success |                                                                 error_message                                                                  | execution_time_ms \n---------+------------------------------------+-------------+---------+------------------------------------------------------------------------------------------------------------------------------------------------+-------------------\n      22 | app.fn_grant_interagency_token     | usr_writer  | f       | [28000] Отказано в доступе: отсутствует действующее юридическое согласие гражданина на предоставление прав \"FULL_ACCESS\" ведомству \"POST_BANK\" |            17.856\n      21 | app.fn_grant_interagency_token     | usr_writer  | t       |                                                                                                                                                |            24.610\n      20 | app.fn_issue_electronic_passport   | usr_writer  | f       | [22023] Некорректная серия паспорта: \"66\" (требуется ровно 4 цифры)                                                                            |             8.661\n      19 | app.fn_issue_electronic_passport   | usr_writer  | t       |                                                                                                                                                |            21.541\n      18 | app.fn_register_biometric_template | usr_writer  | f       | [22003] Недопустимое качество биометрического сэмпла: 38.00 (требуется от 50.00 до 100.00 баллов)                                              |            14.828\n      17 | app.fn_register_biometric_template | usr_writer  | t       |                                                                                                                                                |            18.493\n(6 �����)",
+    "stderr": "",
+    "exit_code": 0,
+    "expected": "SUCCESS (returns recorded successful and failed calls)",
+    "status": "PASSED"
+  }
+]

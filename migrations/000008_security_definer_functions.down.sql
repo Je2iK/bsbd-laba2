@@ -1,0 +1,3 @@
+DROP FUNCTION IF EXISTS app.fn_grant_interagency_token(BIGINT, VARCHAR, VARCHAR, INT);
+DROP FUNCTION IF EXISTS app.fn_issue_electronic_passport(BIGINT, VARCHAR, CHAR, CHAR, VARCHAR, INT, BYTEA, TEXT);
+DROP FUNCTION IF EXISTS app.fn_register_biometric_template(BIGINT, VARCHAR, BYTEA, NUMERIC, VARCHAR, TEXT);

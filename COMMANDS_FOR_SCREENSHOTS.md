@@ -2,8 +2,9 @@
 
 Все команды выполняются в интерактивном терминале **`psql`** (или в окне Query Tool pgAdmin) при подключении к базе данных:
 ```bash
-psql -U postgres -d university_db
+psql -U postgres -p 5433 -h 127.0.0.1 -d university_db
 ```
+*(Пароль для пользователя `postgres`: **`password`**, порт: **`5433`**)*
 
 ---
 

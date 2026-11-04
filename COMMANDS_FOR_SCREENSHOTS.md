@@ -71,7 +71,7 @@ DELETE FROM app.electronic_passports WHERE passport_id = 1;
 *Успешная выдача электронного паспорта через SECURITY DEFINER функцию `fn_issue_electronic_passport`*
 ```sql
 SET ROLE app_writer;
-SELECT app.fn_issue_electronic_passport(2, '2026', '123456', 'CHIP-RU-9921', 'MVD-770-001', '2026-01-01', '2036-01-01');
+SELECT app.fn_issue_electronic_passport(2::bigint, 'E_PASSPORT', '2026', '789123', '660-001', 10, 'CHIP_RAW_PAYLOAD_E_PASSPORT_01'::bytea, 'ChipMasterKey999') AS new_passport_id;
 ```
 
 ### Рисунок 10 (`pgadmin_fig10.png`)

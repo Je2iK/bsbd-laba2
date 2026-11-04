@@ -29,7 +29,7 @@ INSERT INTO app.digital_profiles (citizen_id, snils, trust_level_id, profile_sta
 *Чтение журнала аудита под ролью `auditor`*
 ```sql
 SET ROLE auditor;
-SELECT call_id, call_time, function_name, caller_role, success FROM audit.function_calls ORDER BY call_id LIMIT 5;
+SELECT call_id, call_time, function_name, caller_role, success FROM audit.function_calls ORDER BY call_id DESC LIMIT 5;
 ```
 
 ### Рисунок 4 (`pgadmin_fig04.png`)
@@ -50,14 +50,14 @@ UPDATE app.biometric_templates SET quality_score = 99.00 WHERE template_id = 1;
 *Успешная регистрация биометрического шаблона через SECURITY DEFINER функцию `fn_register_biometric_template`*
 ```sql
 SET ROLE app_writer;
-SELECT app.fn_register_biometric_template(1, 'FINGERPRINT', '\x0123456789abcdef'::bytea, 94.50, 'BIO-SCAN-01', 'sec-master-key-2026');
+SELECT app.fn_register_biometric_template(3::bigint, 'FACE_2D', repeat('BIO_SAMPLE_DATA_', 4)::bytea, 94.50, 'CAM-TERMINAL-07', 'SuperSecretPass123') AS new_bio_id;
 ```
 
 ### Рисунок 7 (`pgadmin_fig07.png`)
-*Отказ регистрации биометрии с недостаточным качеством (quality < 60)*
+*Отказ регистрации биометрии с недостаточным качеством (quality < 50.00)*
 ```sql
 SET ROLE app_writer;
-SELECT app.fn_register_biometric_template(1, 'FINGERPRINT', '\x0123456789abcdef'::bytea, 45.00, 'BIO-SCAN-01', 'sec-master-key-2026');
+SELECT app.fn_register_biometric_template(3::bigint, 'FACE_2D', repeat('BIO_SAMPLE_DATA_', 4)::bytea, 38.00, 'CAM-TERMINAL-07', 'SuperSecretPass123');
 ```
 
 ### Рисунок 8 (`pgadmin_fig08.png`)
@@ -71,42 +71,42 @@ DELETE FROM app.electronic_passports WHERE passport_id = 1;
 *Успешная выдача электронного паспорта через SECURITY DEFINER функцию `fn_issue_electronic_passport`*
 ```sql
 SET ROLE app_writer;
-SELECT app.fn_issue_electronic_passport(2, '2026', '123456', 'CHIP-RU-9921', 'MVD-770-001', '2026-01-01', '2036-01-01');
+SELECT app.fn_issue_electronic_passport(4::bigint, 'E_PASSPORT', '6628', '789127', '660-001', 10, 'CHIP_RAW_PAYLOAD_E_PASSPORT_01'::bytea, 'ChipMasterKey999') AS new_passport_id;
 ```
 
 ### Рисунок 10 (`pgadmin_fig10.png`)
-*Блокировка повторной выдачи паспорта при наличии действующего документа*
+*Отказ выпуска паспорта при нарушении формата бланка (некорректная серия)*
 ```sql
 SET ROLE app_writer;
-SELECT app.fn_issue_electronic_passport(2, '2026', '999999', 'CHIP-RU-9922', 'MVD-770-001', '2026-01-01', '2036-01-01');
+SELECT app.fn_issue_electronic_passport(4::bigint, 'E_PASSPORT', '66', '789', '660001', 10, 'CHIP_RAW_DATA'::bytea, 'ChipMasterKey999');
 ```
 
 ### Рисунок 11 (`pgadmin_fig11.png`)
-*Запрет прямой вставки (INSERT) токена в `app.interagency_tokens` под ролью `app_writer`*
+*Запрет прямой вставки (INSERT) токена в `app.access_tokens` под ролью `app_writer`*
 ```sql
 SET ROLE app_writer;
-INSERT INTO app.interagency_tokens (citizen_id, agency_id, token_hash, scope, expires_at) VALUES (1, 1, 'hash_sample_val', 'PROFILE_READ', now() + interval '1 hour');
+INSERT INTO app.access_tokens (citizen_id, agency_id, token_hash, scope, expires_at) VALUES (1, 1, 'hash_sample_val', 'PROFILE_READ', now() + interval '1 hour');
 ```
 
 ### Рисунок 12 (`pgadmin_fig12.png`)
 *Успешная генерация межведомственного токена через SECURITY DEFINER функцию `fn_grant_interagency_token`*
 ```sql
 SET ROLE app_writer;
-SELECT app.fn_grant_interagency_token(1, 'FTS_RU', 'PROFILE_READ', 60);
+SELECT app.fn_grant_interagency_token(1::bigint, 'MVD', 'PROFILE_READ', 24) AS token_hash;
 ```
 
 ### Рисунок 13 (`pgadmin_fig13.png`)
 *Отказ генерации токена при отсутствии активного согласия гражданина*
 ```sql
 SET ROLE app_writer;
-SELECT app.fn_grant_interagency_token(3, 'FTS_RU', 'BIOMETRIC_MATCH', 60);
+SELECT app.fn_grant_interagency_token(1::bigint, 'POST_BANK', 'FULL_ACCESS', 12) AS token_hash;
 ```
 
 ### Рисунок 14 (`pgadmin_fig14.png`)
 *Отказ генерации токена с недопустимой областью доступа (scope)*
 ```sql
 SET ROLE app_writer;
-SELECT app.fn_grant_interagency_token(1, 'FTS_RU', 'ILLEGAL_ROOT_ACCESS', 60);
+SELECT app.fn_grant_interagency_token(1::bigint, 'MVD', 'ILLEGAL_ROOT_ACCESS', 24);
 ```
 
 ### Рисунок 15 (`pgadmin_fig15.png`)
@@ -217,5 +217,5 @@ FROM generate_series(1, 10000) AS g;
 ### Рисунок 28 (`pgadmin_fig28.png`)
 *Выборка журнала аудита вызовов SECURITY DEFINER функций (успешные и отклонённые вызовы)*
 ```sql
-SELECT call_id, call_time, function_name, caller_role, input_params, success, error_message FROM audit.function_calls ORDER BY call_id;
+SELECT call_id, call_time, function_name, caller_role, input_params, success, error_message FROM audit.function_calls ORDER BY call_id DESC LIMIT 10;
 ```

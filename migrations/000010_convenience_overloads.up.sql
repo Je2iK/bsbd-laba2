@@ -2,34 +2,14 @@
 -- чтобы вызовы из отчёта работали с любым набором параметров
 
 -- 0. Разрешить доступ к схеме public (где лежит расширение pgcrypto) всем ролям
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
 GRANT USAGE ON SCHEMA public TO PUBLIC, app_reader, app_writer, app_owner, auditor;
 GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO PUBLIC, app_reader, app_writer, app_owner, auditor;
 
--- 0.1 Создание таблицы app.interagency_tokens с закрытым доступом для проверки запрета прямой вставки (Рис. 11)
-CREATE TABLE IF NOT EXISTS app.interagency_tokens (
-    token_id bigint generated always as identity primary key,
-    citizen_id bigint,
-    agency_id int,
-    token_hash text,
-    scope text,
-    expires_at timestamptz
-);
-ALTER TABLE app.interagency_tokens OWNER TO app_owner;
-REVOKE ALL ON app.interagency_tokens FROM PUBLIC, app_writer, app_reader;
+-- 1. Отозвать прямой INSERT у app_writer на app.access_tokens (чтобы токены выдавались строго через функцию)
+REVOKE INSERT, UPDATE, DELETE ON app.access_tokens FROM app_writer;
 
--- 1. Добавим ведомство FTS_RU если его нет
-INSERT INTO ref.agencies (agency_code, agency_name, inn, ogrn, trust_tier, is_active)
-VALUES ('FTS_RU', 'Федеральная таможенная служба РФ', '7730176610', '1047730023703', 4, TRUE)
-ON CONFLICT (agency_code) DO NOTHING;
-
--- 2. Добавим активное согласие для гражданина 1 на FTS_RU
-INSERT INTO app.access_consents (profile_id, agency_id, scope, granted_at, valid_until, is_revoked, consent_signature)
-SELECT 1, a.agency_id, 'PROFILE_READ', CURRENT_TIMESTAMP - interval '1 day', CURRENT_TIMESTAMP + interval '1 year', FALSE, 'SIG_FTS_01'
-FROM ref.agencies a
-WHERE a.agency_code = 'FTS_RU'
-ON CONFLICT DO NOTHING;
-
--- 3. Перегрузка fn_issue_electronic_passport на 7 параметров
+-- 2. Перегрузка fn_issue_electronic_passport на 7 параметров
 CREATE OR REPLACE FUNCTION app.fn_issue_electronic_passport(
     p_citizen_id BIGINT,
     p_series VARCHAR,
@@ -67,7 +47,7 @@ $$;
 
 GRANT EXECUTE ON FUNCTION app.fn_issue_electronic_passport(BIGINT, VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR) TO app_writer, dml_admin;
 
--- 4. Перегрузка fn_register_biometric_template с поддержкой FINGERPRINT и байт/текста
+-- 3. Перегрузка fn_register_biometric_template с поддержкой FINGERPRINT и байт/текста
 CREATE OR REPLACE FUNCTION app.fn_register_biometric_template(
     p_citizen_id BIGINT,
     p_modality_code VARCHAR,
@@ -160,7 +140,7 @@ $$;
 
 GRANT EXECUTE ON FUNCTION app.fn_register_biometric_template(BIGINT, VARCHAR, BYTEA, NUMERIC, VARCHAR, TEXT) TO app_writer, dml_admin;
 
--- 5. Перегрузка fn_grant_interagency_token
+-- 4. Перегрузка fn_grant_interagency_token
 CREATE OR REPLACE FUNCTION app.fn_grant_interagency_token(
     p_profile_id BIGINT,
     p_agency_code VARCHAR,

@@ -85,7 +85,7 @@ SELECT app.fn_issue_electronic_passport(2, '26', '999999', 'CHIP-RU-9922', 'MVD-
 *Запрет прямой вставки (INSERT) токена в `app.access_tokens` под ролью `app_writer`*
 ```sql
 SET ROLE app_writer;
-INSERT INTO app.access_tokens (profile_id, agency_id, required_trust_level_id, token_hash, expires_at) VALUES (1, 1, 1, 'hash_sample_val_64chars_abcdef0123456789abcdef0123456789abcdef01234567', now() + interval '1 hour');
+INSERT INTO app.access_tokens (profile_id, agency_id, required_trust_level_id, token_hash, expires_at) VALUES (1, 1, 1, repeat('a', 64), now() + interval '1 hour');
 ```
 
 ### Рисунок 12 (`pgadmin_fig12.png`)

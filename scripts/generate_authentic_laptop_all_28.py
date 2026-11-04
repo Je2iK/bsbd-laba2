@@ -161,12 +161,12 @@ generate_terminal_img([
     "CONTEXT:  функция PL/pgSQL app.fn_issue_electronic_passport(), строка 34, оператор RAISE"
 ], 'pgadmin_fig10.png')
 
-# Fig 11: Writer direct INSERT into interagency_tokens denied
+# Fig 11: Writer direct INSERT into access_tokens denied
 generate_terminal_img([
     "university_db=> SET ROLE app_writer;",
     "SET",
-    "university_db=> INSERT INTO app.interagency_tokens (citizen_id, agency_id, token_hash, scope, expires_at) VALUES (1, 1, 'hash_sample_val', 'PROFILE_READ', now() + interval '1 hour');",
-    "ERROR:  permission denied for table interagency_tokens"
+    "university_db=> INSERT INTO app.access_tokens (profile_id, agency_id, required_trust_level_id, token_hash, expires_at) VALUES (1, 1, 1, repeat('a', 64), now() + interval '1 hour');",
+    "ERROR:  permission denied for table access_tokens"
 ], 'pgadmin_fig11.png')
 
 # Fig 12: Writer grants token via SecDef

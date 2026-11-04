@@ -198,9 +198,9 @@
 // ============================================================================
 #set par(first-line-indent: 1.25cm)
 
-Проведена проверка, что роль app_writer не имеет права напрямую добавлять записи в таблицу app.interagency_tokens (Рисунок 11).
+Проведена проверка, что роль app_writer не имеет права напрямую добавлять записи в таблицу app.access_tokens (Рисунок 11).
 
-#fig-single("images/pgadmin_fig11.png", [Рисунок 11 – Проверка запрета прямого добавления записей в app.interagency_tokens для роли app_writer], h: 7.0cm)
+#fig-single("images/pgadmin_fig11.png", [Рисунок 11 – Проверка запрета прямого добавления записей в app.access_tokens для роли app_writer], h: 7.0cm)
 
 Проведена проверка, что роль app_writer может выдать токен межведомственного взаимодействия через защищенную функцию (Рисунок 12).
 
@@ -619,7 +619,7 @@ BEGIN
     v_token_hash := encode(digest(v_token_str, 'sha256'), 'hex');
     v_expires_at := clock_timestamp() + (p_ttl_minutes || ' minutes')::interval;
 
-    INSERT INTO app.interagency_tokens (
+    INSERT INTO app.access_tokens (
         citizen_id, agency_id, token_hash, scope, issued_at, expires_at, is_revoked
     ) VALUES (
         p_citizen_id, v_agency_id, v_token_hash, p_scope, clock_timestamp(), v_expires_at, FALSE

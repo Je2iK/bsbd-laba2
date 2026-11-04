@@ -402,6 +402,7 @@ GRANT EXECUTE ON FUNCTION app.fn_register_biometric_template(BIGINT, VARCHAR, BY
 GRANT EXECUTE ON FUNCTION app.fn_issue_electronic_passport(BIGINT, VARCHAR, VARCHAR, VARCHAR, VARCHAR, INT, BYTEA, TEXT) TO app_writer;
 GRANT EXECUTE ON FUNCTION app.fn_grant_interagency_token(BIGINT, VARCHAR, VARCHAR, INT) TO app_writer;
 
--- Гарантируем, что прямой доступ к таблицам biometric_templates и electronic_passports для app_writer ОТОЗВАН
+-- Гарантируем, что прямой доступ к таблицам biometric_templates, electronic_passports и access_tokens для app_writer ОТОЗВАН
 REVOKE INSERT, UPDATE, DELETE ON app.biometric_templates FROM app_writer;
 REVOKE INSERT, UPDATE, DELETE ON app.electronic_passports FROM app_writer;
+REVOKE INSERT, UPDATE, DELETE ON app.access_tokens FROM app_writer;

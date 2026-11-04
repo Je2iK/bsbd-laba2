@@ -5,6 +5,18 @@
 GRANT USAGE ON SCHEMA public TO PUBLIC, app_reader, app_writer, app_owner, auditor;
 GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO PUBLIC, app_reader, app_writer, app_owner, auditor;
 
+-- 0.1 Создание таблицы app.interagency_tokens с закрытым доступом для проверки запрета прямой вставки (Рис. 11)
+CREATE TABLE IF NOT EXISTS app.interagency_tokens (
+    token_id bigint generated always as identity primary key,
+    citizen_id bigint,
+    agency_id int,
+    token_hash text,
+    scope text,
+    expires_at timestamptz
+);
+ALTER TABLE app.interagency_tokens OWNER TO app_owner;
+REVOKE ALL ON app.interagency_tokens FROM PUBLIC, app_writer, app_reader;
+
 -- 1. Добавим ведомство FTS_RU если его нет
 INSERT INTO ref.agencies (agency_code, agency_name, inn, ogrn, trust_tier, is_active)
 VALUES ('FTS_RU', 'Федеральная таможенная служба РФ', '7730176610', '1047730023703', 4, TRUE)

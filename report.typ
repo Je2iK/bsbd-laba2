@@ -106,7 +106,7 @@
 
 #text(weight: "bold")[Цель:] Реализовать безопасные операции через функции с повышенными привилегиями, сравнить методы контроля бизнес-правил.
 
-Были реализованы 3 функции для чувствительных операций в предметной области «Защита БД систем цифровой идентификации граждан». Код всех 3 функций приведен в Приложении A.
+Были реализованы 3 функции для чувствительных операций в предметной области «Защита БД систем цифровой идентификации граждан». Код всех 3 функций приведен в Приложении А.
 
 Первая функция (`app.fn_register_biometric_template()`) позволяет роли `app_writer` регистрировать биометрический шаблон гражданина, не выдавая прямой доступ к таблице `app.biometric_templates`. Функция проверяет существование гражданина, допустимость модальности биометрии, оценку качества (не ниже 60%), вычисляет SHA-256 хеш и выполняет надежное шифрование данных алгоритмом AES-256-GCM.
 
@@ -247,7 +247,7 @@
 
 #set par(first-line-indent: 1.25cm)
 
-Для сравнения CHECK и триггера было выбрано следующее бизнес-правило: дата окончания действия согласия (valid_until) должна быть строго позже даты выдачи (granted_at), срок действия согласия не может превышать 5 лет (1826 дней), а запрашиваемый scope должен входить в фиксированный перечень ('PROFILE_READ', 'DOCS_VERIFY', 'BIOMETRIC_MATCH', 'FULL_ACCESS'). Код создания тестовых таблиц, функции проверки бизнес-правила, триггера приведен в Приложении B.
+Для сравнения CHECK и триггера было выбрано следующее бизнес-правило: дата окончания действия согласия (valid_until) должна быть строго позже даты выдачи (granted_at), срок действия согласия не может превышать 5 лет (1826 дней), а запрашиваемый scope должен входить в фиксированный перечень ('PROFILE_READ', 'DOCS_VERIFY', 'BIOMETRIC_MATCH', 'FULL_ACCESS'). Код создания тестовых таблиц, функции проверки бизнес-правила, триггера приведен в Приложении Б.
 
 Была проведена проверка корректности CHECK и триггера путем вставки валидных значений (Рисунок 17–18).
 
@@ -364,12 +364,15 @@
 #pagebreak()
 
 // ============================================================================
+// ============================================================================
+// ============================================================================
+// ============================================================================
 // СТРАНИЦА 18: ПРИЛОЖЕНИЕ A (ЧАСТЬ 1)
 // ============================================================================
-#heading-section[Приложение A]
+#heading-section[Приложение А]
 
-#set text(font: "Consolas", size: 8.5pt)
-#set par(first-line-indent: 0cm, leading: 0.42em)
+#set text(font: "Consolas", size: 7.2pt)
+#set par(first-line-indent: 0cm, leading: 0.32em)
 
 ```sql
 -- app.fn_register_biometric_template - Регистрация биометрии (SECURITY DEFINER)
@@ -423,6 +426,7 @@ BEGIN
     END IF;
 
     IF p_quality_score IS NULL OR p_quality_score < 50.00 OR p_quality_score > 100.00 THEN
+        RAISE EXCEPTION 'Недопустимое качество биометрического сэмпла: % (требуется от 50.00 до 100.00 баллов)', p_quality_score USING ERRCODE = '22003';
 ```
 
 #pagebreak()
@@ -430,9 +434,10 @@ BEGIN
 // ============================================================================
 // СТРАНИЦА 19: ПРИЛОЖЕНИЕ A (ЧАСТЬ 2)
 // ============================================================================
+#set text(font: "Consolas", size: 7.2pt)
+#set par(first-line-indent: 0cm, leading: 0.32em)
+
 ```sql
--- app.fn_register_biometric_template (окончание)
-        RAISE EXCEPTION 'Недопустимое качество биометрического сэмпла: % (требуется от 50.00 до 100.00 баллов)', p_quality_score USING ERRCODE = '22003';
     END IF;
 
     IF p_template_raw IS NULL OR octet_length(p_template_raw) < 32 THEN
@@ -499,6 +504,7 @@ EXCEPTION WHEN OTHERS THEN
     RAISE;
 END;
 $$;
+
 ```
 
 #pagebreak()
@@ -506,6 +512,9 @@ $$;
 // ============================================================================
 // СТРАНИЦА 20: ПРИЛОЖЕНИЕ A (ЧАСТЬ 3)
 // ============================================================================
+#set text(font: "Consolas", size: 7.2pt)
+#set par(first-line-indent: 0cm, leading: 0.32em)
+
 ```sql
 -- app.fn_issue_electronic_passport - Выпуск паспорта (SECURITY DEFINER)
 CREATE OR REPLACE FUNCTION app.fn_issue_electronic_passport(
@@ -564,15 +573,6 @@ BEGIN
         RAISE EXCEPTION 'Некорректный номер паспорта: "%" (требуется ровно 6 цифр)', p_number USING ERRCODE = '22023';
     END IF;
 
-```
-
-#pagebreak()
-
-// ============================================================================
-// СТРАНИЦА 21: ПРИЛОЖЕНИЕ A (ЧАСТЬ 4)
-// ============================================================================
-```sql
--- app.fn_issue_electronic_passport (окончание)
     IF p_issuing_authority_code !~ '^[0-9]{3}-[0-9]{3}$' THEN
         RAISE EXCEPTION 'Некорректный код подразделения: "%" (требуется формат XXX-XXX)', p_issuing_authority_code USING ERRCODE = '22023';
     END IF;
@@ -583,6 +583,17 @@ BEGIN
     END IF;
 
     IF p_validity_years IS NULL OR p_validity_years NOT BETWEEN 1 AND 10 THEN
+```
+
+#pagebreak()
+
+// ============================================================================
+// СТРАНИЦА 21: ПРИЛОЖЕНИЕ A (ЧАСТЬ 4)
+// ============================================================================
+#set text(font: "Consolas", size: 7.2pt)
+#set par(first-line-indent: 0cm, leading: 0.32em)
+
+```sql
         RAISE EXCEPTION 'Срок действия документа должен составлять от 1 до 10 лет (передано: %)', p_validity_years USING ERRCODE = '22003';
     END IF;
 
@@ -646,6 +657,10 @@ EXCEPTION WHEN OTHERS THEN
     RAISE;
 END;
 $$;
+
+-- app.fn_grant_interagency_token - Выдача межведомственного токена (SECURITY DEFINER)
+CREATE OR REPLACE FUNCTION app.fn_grant_interagency_token(
+    p_profile_id BIGINT,
 ```
 
 #pagebreak()
@@ -653,10 +668,10 @@ $$;
 // ============================================================================
 // СТРАНИЦА 22: ПРИЛОЖЕНИЕ A (ЧАСТЬ 5)
 // ============================================================================
+#set text(font: "Consolas", size: 7.2pt)
+#set par(first-line-indent: 0cm, leading: 0.32em)
+
 ```sql
--- app.fn_grant_interagency_token - Межведомственный токен (SECURITY DEFINER)
-CREATE OR REPLACE FUNCTION app.fn_grant_interagency_token(
-    p_profile_id BIGINT,
     p_agency_code VARCHAR(50),
     p_requested_scope VARCHAR(100),
     p_duration_hours INT
@@ -707,15 +722,6 @@ BEGIN
     IF v_profile_status != 'ACTIVE' THEN
         RAISE EXCEPTION 'Цифровой профиль % заблокирован или приостановлен (статус: %)', p_profile_id, v_profile_status USING ERRCODE = '28000';
     END IF;
-```
-
-#pagebreak()
-
-// ============================================================================
-// СТРАНИЦА 23: ПРИЛОЖЕНИЕ A (ЧАСТЬ 6)
-// ============================================================================
-```sql
--- app.fn_grant_interagency_token (окончание)
 
     -- Проверка ведомства
     SELECT agency_id, trust_tier INTO v_agency_id, v_agency_tier
@@ -779,8 +785,20 @@ EXCEPTION WHEN OTHERS THEN
     RAISE;
 END;
 $$;
+```
 
--- stg.consents_benchmark_check (DDL с ограничениями CHECK)
+#pagebreak()
+
+// ============================================================================
+// СТРАНИЦА 23: ПРИЛОЖЕНИЕ Б (ЧАСТЬ 1)
+// ============================================================================
+#heading-section[Приложение Б]
+
+#set text(font: "Consolas", size: 7.2pt)
+#set par(first-line-indent: 0cm, leading: 0.32em)
+
+```sql
+-- Тестовые таблицы сравнения CHECK и триггера
 CREATE TABLE IF NOT EXISTS stg.consents_benchmark_check (
     consent_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     profile_id BIGINT NOT NULL,
@@ -800,15 +818,21 @@ CREATE TABLE IF NOT EXISTS stg.consents_benchmark_check (
 
 COMMENT ON TABLE stg.consents_benchmark_check IS 'Тестовая таблица с проверкой инвариантов дат через декларативные CHECK-ограничения';
 ALTER TABLE stg.consents_benchmark_check OWNER TO app_owner;
-```
 
-#pagebreak()
+CREATE TABLE IF NOT EXISTS stg.consents_benchmark_trigger (
+    consent_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    profile_id BIGINT NOT NULL,
+    agency_id INT NOT NULL,
+    scope VARCHAR(50) NOT NULL,
+    granted_at TIMESTAMPTZ NOT NULL,
+    valid_until TIMESTAMPTZ NOT NULL,
+    consent_signature TEXT NOT NULL
+);
 
-// ============================================================================
-// СТРАНИЦА 24: ПРИЛОЖЕНИЕ A (ЧАСТЬ 7)
-// ============================================================================
-```sql
--- Триггерная валидация бизнес-правил (BEFORE INSERT)
+COMMENT ON TABLE stg.consents_benchmark_trigger IS 'Тестовая таблица с проверкой инвариантов дат через процедурный BEFORE-триггер и аудит';
+ALTER TABLE stg.consents_benchmark_trigger OWNER TO app_owner;
+
+-- Функция BEFORE-триггера stg.fn_trg_validate_consent_benchmark
 CREATE OR REPLACE FUNCTION stg.fn_trg_validate_consent_benchmark()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -837,6 +861,17 @@ BEGIN
         END;
 
         RAISE EXCEPTION 'Бизнес-ошибка: дата окончания согласия (%s) должна быть строго позже даты его выдачи (%s)',
+```
+
+#pagebreak()
+
+// ============================================================================
+// СТРАНИЦА 24: ПРИЛОЖЕНИЕ Б (ЧАСТЬ 2)
+// ============================================================================
+#set text(font: "Consolas", size: 7.2pt)
+#set par(first-line-indent: 0cm, leading: 0.32em)
+
+```sql
             NEW.valid_until, NEW.granted_at USING ERRCODE = '23514';
     END IF;
 

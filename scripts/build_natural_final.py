@@ -295,10 +295,9 @@ def generate_docx():
         p_logo.paragraph_format.space_after = Pt(12)
         p_logo.add_run().add_picture(LOGO_PATH, width=Cm(6.5))
 
-    t_p('ОТЧЕТ ПО ЛАБОРАТОРНОЙ РАБОТЕ № 2', bold=True, size=16, space_after=6)
-    t_p('по дисциплине: «Безопасность систем баз данных»', size=13, space_after=6)
-    t_p('Тема: «Точечное повышение привилегий и контроль бизнес-логики»', bold=True, size=13, space_after=6)
-    t_p('Вариант: 12. Защита БД систем цифровой идентификации граждан – защита биометрических данных, электронных паспортов и единого цифрового профиля с контролем доступа по уровням доверия', size=11, space_after=16)
+    t_p('ЛАБОРАТОРНАЯ РАБОТА №2', bold=True, size=16, space_after=8)
+    t_p('по дисциплине: «Безопасность систем баз данных»', size=13, space_after=10)
+    t_p('Вариант: Защита БД систем цифровой идентификации граждан', bold=True, size=13, space_after=24)
 
     tbl = doc.add_table(rows=1, cols=2)
     tbl.alignment = WD_TABLE_ALIGNMENT.CENTER
@@ -335,7 +334,7 @@ def generate_docx():
     doc.add_page_break()
 
     # --- Стр 2: SECURITY DEFINER-ФУНКЦИИ ---
-    add_heading('SECURITY DEFINER-функции (краткий обзор)')
+    add_heading('SECURITY DEFINER-функции (точечное повышение)')
     add_p('Цель: изучение механизмов точечного повышения привилегий в базах данных систем цифровой идентификации граждан, управление доступом через функции-шлюзы и сравнительный анализ производительности контроля бизнес-логики.')
     add_p('В соответствии с требованиями законодательства о защите персональных данных (152-ФЗ) прямой доступ прикладной сервисной роли app_writer к таблицам биометрических дескрипторов, электронных паспортов и токенов доступа категорически запрещен. Любые операции добавления и модификации производятся исключительно через шлюзовые процедуры SECURITY DEFINER в контексте владельца схемы app_owner. Исходный код функций безопасности приведен в Приложении А.')
     add_p('Первая функция (app.fn_register_biometric_template()) производит регистрацию биометрических шаблонов лица и отпечатков пальцев. Процедура валидирует порог качества Liveness-сканирования (не ниже 50.00), рассчитывает хэш-сумму SHA-256 и выполняет симметричное шифрование сырого вектора алгоритмом AES-256 через модуль pgcrypto, обеспечивая профилю уровень доверия Trust Level 5.')
@@ -415,13 +414,18 @@ def generate_docx():
         r_c.font.size = Pt(8.0)
         r_c.font.color.rgb = RGBColor(0, 0, 0)
 
-    try:
-        doc.save(OUT_DOCX)
-        print("Successfully built БСБД_Корецкий_ПС_ЛР2.docx with natural flow!")
-    except PermissionError:
-        alt_path = r'e:\laba2\БСБД_Корецкий_ПС_ЛР2_финал.docx'
-        doc.save(alt_path)
-        print("OUT_DOCX is locked by Word! Saved to", alt_path)
+    target_paths = [
+        r'e:\laba2\БСБД_КорецкийП.С._ЛР2.docx',
+        r'e:\laba2\БСБД_Корецкий_П.С._ЛР2.docx',
+        r'e:\laba2\БСБД_Корецкий_ПС_ЛР2_финал.docx',
+        OUT_DOCX,
+    ]
+    for p in target_paths:
+        try:
+            doc.save(p)
+            print("Successfully saved DOCX to:", p)
+        except PermissionError:
+            print("File locked by Word, skipped:", p)
 
 def generate_typst():
     # Build Typst source
@@ -525,13 +529,11 @@ def generate_typst():
 #v(20pt)
 
 #align(center)[
-  #text(size: 16pt, weight: "bold")[ОТЧЕТ ПО ЛАБОРАТОРНОЙ РАБОТЕ № 2] \\
-  #v(6pt)
-  #text(size: 13pt)[по дисциплине: #strong[#emph[«Безопасность систем баз данных»]]] \\
+  #text(size: 16pt, weight: "bold")[ЛАБОРАТОРНАЯ РАБОТА №2] \
   #v(8pt)
-  #text(size: 13pt, weight: "bold")[Тема: «Точечное повышение привилегий и контроль бизнес-логики»] \\
-  #v(6pt)
-  #text(size: 11pt)[Вариант: 12. Защита БД систем цифровой идентификации граждан – защита биометрических данных, электронных паспортов и единого цифрового профиля с контролем доступа по уровням доверия]
+  #text(size: 13pt)[по дисциплине: #strong[#emph[«Безопасность систем баз данных»]]] \
+  #v(10pt)
+  #text(size: 13pt, weight: "bold")[Вариант: Защита БД систем цифровой идентификации граждан]
 ]
 
 #v(25pt)
@@ -582,7 +584,7 @@ def generate_typst():
 // ============================================================================
 // Стр 2: SECURITY DEFINER-ФУНКЦИИ (КРАТКИЙ ОБЗОР)
 // ============================================================================
-#heading-section[SECURITY DEFINER-функции (краткий обзор)]
+#heading-section[SECURITY DEFINER-функции (точечное повышение)]
 
 #set par(first-line-indent: 1.25cm, justify: true)
 
